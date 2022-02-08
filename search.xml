@@ -5,4 +5,84 @@
     <url>/2022/01/27/mySQL%E5%AE%89%E8%A3%85/</url>
     <content><![CDATA[<h3 id="如何安装mySQL"><a href="#如何安装mySQL" class="headerlink" title="如何安装mySQL"></a>如何安装mySQL</h3>]]></content>
   </entry>
+  <entry>
+    <title></title>
+    <url>/2022/02/07/10.29EventLoop/</url>
+    <content><![CDATA[<h2 id="EventLoop"><a href="#EventLoop" class="headerlink" title="EventLoop"></a>EventLoop</h2><ul>
+<li>promise、async、setTimeout 执行顺序</li>
+<li>理解Event Loop（事件循环）</li>
+</ul>
+<details>
+<summary>Event Loop（事件循环）</summary>
+<blockquote>
+ <details>
+ <summary>需要了解的一些点</summary>
+<blockquote>
+- 首先是js运行机制是什么？  
+  - JavaScript语言是单线程的，同一个时间只能做一件事；
+  - 遵循事件循环机制，当JS解析执行时，会被引擎分为两类任务，同步任务（synchronous） 和 异步任务（asynchronous）。对于同步任务来说，会被推到执行栈按顺序去执行这些任务。对于异步任务来说，当其可以被执行时，会被放到一个 任务队列（task queue） 里等待JS引擎去执行。当执行栈中的所有同步任务完成后，JS引擎才会去任务队列里查看是否有任务存在，并将任务放到执行栈中去执行，执行完了又会去任务队列里查看是否有已经可以执行的任务。这种循环检查的机制，就叫做事件循环(Event Loop)。对于任务队列，其实是有更细的分类。其被分为 微任务（microtask）队列 & 宏任务（macrotask）队列。
+  - **总结：同步任务是同步任务，异步任务分（微任务、宏任务）**
+- 任务队列是什么？
+
+<ul>
+<li><p>单线程就意味着，所有任务需要排队，前一个任务结束，才会执行后一个任务。如果前一个任务耗时很长，后一个任务就不得不一直等着。</p>
+</li>
+<li><p>所有任务可以分成两种，一种是<strong>同步任务（synchronous）</strong>，另一种是<strong>异步任务（asynchronous）</strong>。同步任务指的是，在主线程上排队执行的任务，只有前一个任务执行完毕，才能执行后一个任务；异步任务指的是，不进入主线程、而进入”任务队列”（task queue）的任务，只有”任务队列”通知主线程，某个异步任务可以执行了，该任务才会进入主线程执行。</p>
+</li>
+<li><p>异步任务可以分为（微任务、宏任务），微任务优先级高于宏任务。</p>
+</li>
+<li><p>异步执行的运行机制如下：</p>
+<blockquote>
+<p>（1）所有同步任务都在主线程上执行，形成一个执行栈（execution context stack）。</p>
+</blockquote>
+<blockquote>
+<p>（2）主线程之外，还存在一个”任务队列”（task queue）。只要异步任务有了运行结果，就在”任务队列”之中放置一个事件。</p>
+</blockquote>
+<blockquote>
+<p>（3）一旦”执行栈”中的所有同步任务执行完毕，系统就会读取”任务队列”，看看里面有哪些事件。那些对应的异步任务，于是结束等待状态，进入执行栈，开始执行。</p>
+</blockquote>
+<blockquote>
+<p>（4）主线程不断重复上面的第三步。</p>
+</blockquote>
+</li>
+</ul>
+<p><img src="https://pic1.zhimg.com/80/v2-59a1cbab9a259817f728849d60ede6ac_720w.jpg" alt=" &quot;eventloop&quot; "></p>
+<ul>
+<li><strong>宏任务</strong>包括：script(整体代码)，I/O， setTimeout，setInterval，requestAnimationFrame，setImmediate。其中setImmediate只存在于Node中，requestAnimationFrame只存在于浏览器中。</li>
+<li><strong>微任务</strong>包括：Promise，Object.observe(已废弃)，MutationObserver(html5新特性)，process.nextTick。其中process.nextTick只存在于Node中，MutationObserver只存在于浏览器中。</li>
+</ul>
+<p><img src="https://img-blog.csdnimg.cn/2020120520201083.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMxOTY3OTg1,size_16,color_FFFFFF,t_70" alt="图片"></p>
+</blockquote>
+
+<h3 id="完整关系"><a href="#完整关系" class="headerlink" title="完整关系"></a>完整关系</h3><p><img src="image.png" alt="图片"></p>
+</details>
+</blockquote>
+</details>
+
+  <details>
+   <summary>问题？</summary>
+
+   <figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// -------------</span></span><br><span class="line">&lt;script&gt;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="number">1</span>);</span><br><span class="line">  <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="number">2</span>)</span><br><span class="line">&#125;, <span class="number">0</span>);</span><br><span class="line">  <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function">(<span class="params">resolve</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="number">3</span>)</span><br><span class="line">  resolve();</span><br><span class="line">&#125;).then(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="number">4</span>)</span><br><span class="line">&#125;);</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">delay</span>(<span class="params">time</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function">(<span class="params">resolve</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="number">6</span>);</span><br><span class="line">    <span class="built_in">setTimeout</span>(resolve, time);</span><br><span class="line">  &#125;).then(<span class="function">()=&gt;</span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="number">15</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br><span class="line">  (<span class="keyword">async</span> <span class="function"><span class="keyword">function</span> <span class="title">aa</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="number">12</span>)</span><br><span class="line">  <span class="keyword">await</span> delay(<span class="number">2000</span>);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="number">14</span>);</span><br><span class="line">&#125;)();</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="number">5</span>);</span><br><span class="line">  <span class="comment">// 1 3 12 6 5 4 14 2 15</span></span><br><span class="line">  </span><br><span class="line">  </span><br><span class="line">&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+</details>
+
+<ul>
+<li>了解Promise</li>
+</ul>
+<blockquote>
+<p>Promise是异步编程的一种解决方案，其实是一个构造函数，自己身上有all、reject、resolve这几个方法，原型上有then、catch等方法。</p>
+</blockquote>
+<ul>
+<li>Promise运行顺序总结<ul>
+<li>promise的构造函数是同步执行，promise.then中的函数是异步执行。</li>
+<li>构造函数中的 resolve 或 reject 只有第一次执行有效，多次调用没有任何作用。promise状态一旦改变则不能再变。</li>
+<li>promise 的 .then 或者 .catch 可以被调用多次，但这里 Promise 构造函数只执行一次。或者说 promise 内部状态一经改变，并且有了一个值，那么后续每次调用 .then 或者 .catch 都会直接拿到该值。</li>
+<li>如果在一个then（）中没有返回一个新的promise，则 return 什么下一个then就接受什么，如果then中没有return，则默认return的是 undefined.</li>
+<li>then()的嵌套会先将内部的then()执行完毕再继续执行外部的then();</li>
+<li>catch和then的连用，如果每一步都有可能出现错误，那么就可能出现catch后面接上then的情况。如果在catch中也抛出了错误，则后面的then的第一个函数不会执行，因为返回的 promise状态已经为rejected了</li>
+</ul>
+</li>
+</ul>
+<h3 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h3><p><strong>浏览器和Node环境下，microtask 任务队列的执行时机不同：Node 端，microtask 在事件循环的各个阶段之间执行；浏览器端，microtask 在事件循环的 macrotask 执行完之后执行；</strong></p>
+]]></content>
+  </entry>
 </search>
